@@ -1,7 +1,17 @@
+const getBaseUrl = apiHost => `${apiHost}/api/v1`
+
+const getBaseHeaders = accessToken => {
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+    }
+}
+
 export default class Reptoid {
     
-    constructor({ accessToken }) {
+    constructor({ apiHost, accessToken }) {
         this.creds = {
+            apiHost: apiHost || 'https://api.codebases.reptoid.com',
             accessToken,
         }
     }
@@ -66,39 +76,36 @@ class WorkspacesManager {
     constructor({ accountId, creds }) {
         this.accountId = accountId
         this.creds = creds
+        this.baseUrl = `${getBaseUrl(this.creds.apiHost)}/accounts/${this.accountId}/workspaces`
     }
 
     all = async () => {
-        return fetch(`http://localhost:3010/api/v1/accounts/${this.accountId}/workspaces`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.creds.accessToken}`,
-                }
-            })
-            .then(resp => resp.json())
-            .then(({ result, reason, data }) => {
-                if (result === 'ok') {
-                    return data.workspaces || []
-                }
-                throw Error('Error:' + reason)
-            })
+        return fetch(this.baseUrl, {
+            method: 'GET',
+            headers: getBaseHeaders(this.creds.accessToken),
+        })
+        .then(resp => resp.json())
+        .then(({ result, reason, data }) => {
+            if (result === 'ok') {
+                return data.workspaces || []
+            }
+            throw Error('Error:' + reason)
+        })
     }
 
     create = async () => {
-        return fetch(`http://localhost:3010/api/v1/accounts/${this.accountId}/workspaces`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.creds.accessToken}`,
-                },
-                body: JSON.stringify({})
-            })
-            .then(resp => resp.json())
-            .then(({ result, reason, data }) => {
-                if (result === 'ok') {
-                    return data
-                }
-                throw Error('Error:' + reason)
-            })
+        return fetch(this.baseUrl, {
+            method: 'POST',
+            headers: getBaseHeaders(this.creds.accessToken),
+            body: JSON.stringify({})
+        })
+        .then(resp => resp.json())
+        .then(({ result, reason, data }) => {
+            if (result === 'ok') {
+                return data
+            }
+            throw Error('Error:' + reason)
+        })
     }
 
 }
