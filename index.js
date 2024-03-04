@@ -34,7 +34,7 @@ class UserManager {
     workspaces = () => this._workspaces
 
     workspace = (workspaceId) => {
-        return new WorkspaceManager({ accountId: this.accountId, workspaceId })
+        return new WorkspaceManager({ accountId: this.accountId, workspaceId, creds: this.creds })
     }
 }
 
@@ -128,28 +128,61 @@ class WorkspaceManager {
         this.creds = creds
     }
 
+    file = (filePath) => {
+        return new FileManager({ accountId: this.accountId, workspaceId: this.workspaceId, filePath, creds: this.creds })
+    }
+
     remove = () => {
         return {
             workspaceId: '123',
         }
     }
+}
 
-    putFile = async (workspaceId, filePath, content) => {
-        return {
-            result: 'ok'
-        }
+class FileManager {
+    constructor({ accountId, workspaceId, filePath, creds }) {
+        this.accountId = accountId
+        this.workspaceId = workspaceId
+        this.filePath = filePath 
+        this.creds = creds
+        this.baseUrl = `${getBaseUrl(this.creds.apiHost)}/accounts/${this.accountId}/workspaces/${this.workspaceId}/files`
     }
 
-    readFile = async (workspaceId, filePath) => {
-        return {
-            result: 'ok',
-            content: 'fgsdfsdfsdf'
-        }
+    read = async () => {
+        return fetch(this.baseUrl + `?filePath=${encodeURIComponent(this.filePath)}`, {
+            method: 'GET',
+            headers: getBaseHeaders(this.creds.accessToken),
+        })
+        .then(resp => resp.json())
+        .then(({ result, reason, data }) => {
+            if (result === 'ok') {
+                return data
+            }
+            throw Error('Error:' + reason)
+        })
     }
-    
-    removeFile = async (workspaceId, filePath) => {
-        return {
-            result: 'ok'
-        }
+
+    write = async (content) => {
+        console.log('!!!!',
+            JSON.stringify({
+                filePath: this.filePath,
+                content,
+            })
+        )
+        return fetch(this.baseUrl, {
+            method: 'POST',
+            headers: getBaseHeaders(this.creds.accessToken),
+            body: JSON.stringify({
+                filePath: this.filePath,
+                content,
+            })
+        })
+        .then(resp => resp.json())
+        .then(({ result, reason, data }) => {
+            if (result === 'ok') {
+                return 
+            }
+            throw Error('Error:' + reason)
+        })
     }
 }
