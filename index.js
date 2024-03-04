@@ -26,10 +26,11 @@ class UserManager {
     constructor({ accountId, creds }) {
         this.accountId = accountId
         this.creds = creds
-        this.github = new GithubManager({ accountId, creds: this.creds })
+        this._github = new GithubManager({ accountId, creds: this.creds })
         this._workspaces = new WorkspacesManager({ accountId, creds: this.creds })
     }
 
+    github = () => this._github
     workspaces = () => this._workspaces
 
     workspace = (workspaceId) => {
@@ -39,15 +40,24 @@ class UserManager {
 
 class GithubManager {
 
-    constructor({ creds }) {
+    constructor({ accountId, creds }) {
+        this.accountId = accountId
         this.creds = creds
+        this.baseUrl = `${getBaseUrl(this.creds.apiHost)}/accounts/${this.accountId}/github`
     }
     
-    getRepositories = async () => {
-        return [
-            'viperfish',
-            'code-generator-sample',
-        ]
+    repos = async () => {
+        return fetch(`${this.baseUrl}/repos`, {
+            method: 'GET',
+            headers: getBaseHeaders(this.creds.accessToken),
+        })
+        .then(resp => resp.json())
+        .then(({ result, reason, data }) => {
+            if (result === 'ok') {
+                return data.repos || []
+            }
+            throw Error('Error:' + reason)
+        })
     }
 
     connect = async ({ githubAccessToken }) => {
