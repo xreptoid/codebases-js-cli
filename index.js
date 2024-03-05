@@ -17,16 +17,56 @@ export default class Reptoid {
     }
 
     account = (accountId) => {
-        return new UserManager({ accountId, creds: this.creds })
+        return new AccountManager({ accountId, creds: this.creds })
+    }
+
+    github = () => {
+        return new GithubManager({ creds: this.creds })
     }
 }
 
-class UserManager {
+class GithubManager {
+
+    constructor({ creds }) {
+        this.creds = creds
+        this.baseUrl = `${getBaseUrl(this.creds.apiHost)}/github`
+    }
+
+    authByCode = async code => {
+        return fetch(`${this.baseUrl}/auth-by-code`, {
+            method: 'POST',
+            headers: getBaseHeaders(this.creds.accessToken),
+            body: JSON.stringify({ code }),
+        }).then(resp => resp.json())
+            .then(({ result, data, reason }) => {
+                if (result === 'ok') {
+                    return data
+                }
+                throw Error('Error:' + reason)
+            })
+    }
+    
+    getAccessTokenByCode = async code => {
+        return fetch(`${this.baseUrl}/github`, {
+            method: 'POST',
+            headers: getBaseHeaders(this.creds.accessToken),
+            body: JSON.stringify({ code }),
+        }).then(resp => resp.json())
+            .then(({ result, data, reason }) => {
+                if (result === 'ok') {
+                    return data.accessToken
+                }
+                throw Error('Error:' + reason)
+            })
+    }
+}
+
+class AccountManager {
     
     constructor({ accountId, creds }) {
         this.accountId = accountId
         this.creds = creds
-        this._github = new GithubManager({ accountId, creds: this.creds })
+        this._github = new AccountGithubManager({ accountId, creds: this.creds })
         this._workspaces = new WorkspacesManager({ accountId, creds: this.creds })
     }
 
@@ -38,7 +78,7 @@ class UserManager {
     }
 }
 
-class GithubManager {
+class AccountGithubManager {
 
     constructor({ accountId, creds }) {
         this.accountId = accountId
