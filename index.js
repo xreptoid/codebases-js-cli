@@ -167,16 +167,25 @@ class WorkspaceManager {
         this.accountId = accountId
         this.workspaceId = workspaceId
         this.creds = creds
+        this.baseUrl = `${getBaseUrl(this.creds.apiHost)}/accounts/${this.accountId}/workspaces/${workspaceId}`
     }
 
     file = (filePath) => {
         return new FileManager({ accountId: this.accountId, workspaceId: this.workspaceId, filePath, creds: this.creds })
     }
 
-    remove = () => {
-        return {
-            workspaceId: '123',
-        }
+    remove = async () => {
+        return fetch(this.baseUrl, {
+            method: 'DELETE',
+            headers: getBaseHeaders(this.creds.accessToken),
+        })
+        .then(resp => resp.json())
+        .then(({ result, reason, data }) => {
+            if (result === 'ok') {
+                return 
+            }
+            throw Error('Error:' + reason)
+        })
     }
 }
 
@@ -204,18 +213,29 @@ class FileManager {
     }
 
     write = async (content) => {
-        console.log('!!!!',
-            JSON.stringify({
-                filePath: this.filePath,
-                content,
-            })
-        )
         return fetch(this.baseUrl, {
             method: 'POST',
             headers: getBaseHeaders(this.creds.accessToken),
             body: JSON.stringify({
                 filePath: this.filePath,
                 content,
+            })
+        })
+        .then(resp => resp.json())
+        .then(({ result, reason, data }) => {
+            if (result === 'ok') {
+                return 
+            }
+            throw Error('Error:' + reason)
+        })
+    }
+
+    createFolder = async () => {
+        return fetch(`${getBaseUrl(this.creds.apiHost)}/accounts/${this.accountId}/workspaces/${this.workspaceId}/folder`, {
+            method: 'POST',
+            headers: getBaseHeaders(this.creds.accessToken),
+            body: JSON.stringify({
+                filePath: this.filePath,
             })
         })
         .then(resp => resp.json())
