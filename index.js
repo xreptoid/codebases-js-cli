@@ -107,17 +107,18 @@ class AccountGithubManager {
         }
     }
 
-    clone = async (path) => {
-        if (false) {
-            return {
-                result: 'error',
-                reason: 'no-access'
-            }
-        }
-        return {
-            workspaceId: '1233333',
-            status: 'CLONING'
-        }
+    clone = async (repoPath) => {
+        return fetch(`${this.baseUrl}/clone`, {
+            method: 'POST',
+            headers: getBaseHeaders(this.creds.accessToken),
+            body: JSON.stringify({
+                repoPath
+            })
+        })
+        .then(resp => resp.json())
+        .then(({ result, reason, body }) => {
+            return
+        })
     }
 }
 
