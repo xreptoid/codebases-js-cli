@@ -144,11 +144,13 @@ class WorkspacesManager {
         })
     }
 
-    create = async () => {
+    create = async ({ meta }) => {
         return fetch(this.baseUrl, {
             method: 'POST',
             headers: getBaseHeaders(this.creds.accessToken),
-            body: JSON.stringify({})
+            body: JSON.stringify({
+                meta: meta || {}
+            })
         })
         .then(resp => resp.json())
         .then(({ result, reason, data }) => {
@@ -172,6 +174,19 @@ class WorkspaceManager {
 
     file = (filePath) => {
         return new FileManager({ accountId: this.accountId, workspaceId: this.workspaceId, filePath, creds: this.creds })
+    }
+
+    get = async () => {
+        return fetch(this.baseUrl, {
+            method: 'GET',
+            headers: getBaseHeaders(this.creds.accessToken),
+        }).then(resp => resp.json())
+        .then(({ result, reason, data }) => {
+            if (result === 'ok') {
+                return data
+            }
+            throw Error('Error:' + reason)
+        })
     }
 
     remove = async () => {
