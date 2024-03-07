@@ -170,11 +170,14 @@ class WorkspaceManager {
         this.workspaceId = workspaceId
         this.creds = creds
         this.baseUrl = `${getBaseUrl(this.creds.apiHost)}/accounts/${this.accountId}/workspaces/${workspaceId}`
+        this._git = new GitManager({ accountId, workspaceId, creds })
     }
 
     file = (filePath) => {
         return new FileManager({ accountId: this.accountId, workspaceId: this.workspaceId, filePath, creds: this.creds })
     }
+
+    git = () => this._git
 
     get = async () => {
         return fetch(this.baseUrl, {
@@ -257,6 +260,88 @@ class FileManager {
         .then(({ result, reason, data }) => {
             if (result === 'ok') {
                 return 
+            }
+            throw Error('Error:' + reason)
+        })
+    }
+}
+
+class GitManager {
+    constructor({ accountId, workspaceId, creds }) {
+        this.accountId = accountId
+        this.workspaceId = workspaceId
+        this.creds = creds
+        this.baseUrl = `${getBaseUrl(this.creds.apiHost)}/accounts/${this.accountId}/workspaces/${this.workspaceId}/git`
+    }
+
+    status = async () => {
+        return fetch(this.baseUrl + '/status', {
+            method: 'GET',
+            headers: getBaseHeaders(this.creds.accessToken),
+        })
+        .then(resp => resp.json())
+        .then(({ result, reason, data }) => {
+            if (result === 'ok') {
+                return data
+            }
+            throw Error('Error:' + reason)
+        })
+    }
+
+    diff = async () => {
+        return fetch(this.baseUrl + '/diff', {
+            method: 'GET',
+            headers: getBaseHeaders(this.creds.accessToken),
+        })
+        .then(resp => resp.json())
+        .then(({ result, reason, data }) => {
+            if (result === 'ok') {
+                return data
+            }
+            throw Error('Error:' + reason)
+        })
+    }
+
+    init = async () => {
+        return fetch(this.baseUrl + '/init', {
+            method: 'POST',
+            headers: getBaseHeaders(this.creds.accessToken),
+        })
+        .then(resp => resp.json())
+        .then(({ result, reason, data }) => {
+            if (result === 'ok') {
+                return data
+            }
+            throw Error('Error:' + reason)
+        })
+    }
+
+    push = async () => {
+        return fetch(this.baseUrl + '/push', {
+            method: 'POST',
+            headers: getBaseHeaders(this.creds.accessToken),
+        })
+        .then(resp => resp.json())
+        .then(({ result, reason, data }) => {
+            if (result === 'ok') {
+                return data
+            }
+            throw Error('Error:' + reason)
+        })
+    }
+
+    setOrigin = async (url) => {
+        return fetch(this.baseUrl + '/set-origin', {
+            method: 'POST',
+            headers: getBaseHeaders(this.creds.accessToken),
+            body: JSON.stringify({
+                url
+            })
+        })
+        .then(resp => resp.json())
+        .then(({ result, reason, data }) => {
+            if (result === 'ok') {
+                return data
             }
             throw Error('Error:' + reason)
         })
