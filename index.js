@@ -120,6 +120,21 @@ class AccountGithubManager {
             return
         })
     }
+
+    create = async (repoPath, { private: isPrivate }) => {
+        return fetch(`${this.baseUrl}/repos`, {
+            method: 'POST',
+            headers: getBaseHeaders(this.creds.accessToken),
+            body: JSON.stringify({
+                repoPath,
+                private: isPrivate
+            })
+        })
+        .then(resp => resp.json())
+        .then(({ result, reason, body }) => {
+            return
+        })
+    }
 }
 
 class WorkspacesManager {
@@ -288,8 +303,9 @@ class GitManager {
         })
     }
 
-    diff = async () => {
-        return fetch(this.baseUrl + '/diff', {
+    diff = async (params) => {
+        const { cached } = params || {}
+        return fetch(this.baseUrl + `/diff?cached=${cached ? '1' : ''}`, {
             method: 'GET',
             headers: getBaseHeaders(this.creds.accessToken),
         })
@@ -316,6 +332,37 @@ class GitManager {
         })
     }
 
+    addAll = async () => {
+        return fetch(this.baseUrl + '/add-all', {
+            method: 'POST',
+            headers: getBaseHeaders(this.creds.accessToken),
+        })
+        .then(resp => resp.json())
+        .then(({ result, reason, data }) => {
+            if (result === 'ok') {
+                return data
+            }
+            throw Error('Error:' + reason)
+        })
+    }
+
+    commit = async ({ message }) => {
+        return fetch(this.baseUrl + '/commit', {
+            method: 'POST',
+            headers: getBaseHeaders(this.creds.accessToken),
+            body: JSON.stringify({
+                message,
+            })
+        })
+        .then(resp => resp.json())
+        .then(({ result, reason, data }) => {
+            if (result === 'ok') {
+                return data
+            }
+            throw Error('Error:' + reason)
+        })
+    }
+
     push = async () => {
         return fetch(this.baseUrl + '/push', {
             method: 'POST',
@@ -330,12 +377,12 @@ class GitManager {
         })
     }
 
-    setOrigin = async (url) => {
+    setOrigin = async ({ platform, path}) => {
         return fetch(this.baseUrl + '/set-origin', {
             method: 'POST',
             headers: getBaseHeaders(this.creds.accessToken),
             body: JSON.stringify({
-                url
+                origin: { platform, path }
             })
         })
         .then(resp => resp.json())
